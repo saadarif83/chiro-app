@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const { initDB } = require('./database');
 
 const app = express();
 
@@ -11,18 +12,20 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// ── API routes ───────────────────────────────────────────────────────────────
+// ── API routes ────────────────────────────────────────────────────────────────
 app.use('/api/auth',        require('./routes/auth'));
 app.use('/api/patients',    require('./routes/patients'));
 app.use('/api/assessments', require('./routes/assessments'));
 app.use('/api/conditions',  require('./routes/conditions'));
 
-// ── Serve built frontend in production ───────────────────────────────────────
+// ── Serve built frontend in production ────────────────────────────────────────
 const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');
 app.use(express.static(frontendDist));
-app.get('*', (req, res) => {
-  res.sendFile(path.join(frontendDist, 'index.html'));
-});
+app.get('*', (_req, res) => res.sendFile(path.join(frontendDist, 'index.html')));
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`ChiroCare server running on port ${PORT}`));
+
+// Init DB first, then start listening
+initDB()
+  .then(() => app.listen(PORT, () => console.log(`ChiroCare running on port ${PORT}`)))
+  .catch(err => { console.error('DB init failed:', err); process.exit(1); });
