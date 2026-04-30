@@ -1,3 +1,10 @@
+/**
+ * PatientDetail — Doctor view of a single patient's full assessment history.
+ *
+ * Accessed at /doctor/patients/:id. Each assessment card shows conditions,
+ * the recommended treatment plan badge, and a notes excerpt. Doctors can
+ * start a new assessment or edit any existing one from here.
+ */
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { patientsApi, assessmentsApi } from '../api'

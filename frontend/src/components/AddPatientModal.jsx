@@ -1,3 +1,10 @@
+/**
+ * AddPatientModal — Doctor-only modal for registering a new patient account.
+ *
+ * Props:
+ *   onClose  {() => void}  — called when the modal should be dismissed
+ *   onAdded  {() => void}  — called after successful creation (triggers list refresh)
+ */
 import { useState } from 'react'
 import { authApi } from '../api'
 

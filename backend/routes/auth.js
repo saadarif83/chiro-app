@@ -1,3 +1,10 @@
+/**
+ * routes/auth.js — Authentication routes.
+ *
+ * POST /api/auth/login           → email + password → JWT
+ * POST /api/auth/register        → public patient self-registration → JWT
+ * POST /api/auth/register-patient → doctor-only patient creation (no JWT returned)
+ */
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -5,6 +12,9 @@ const { db } = require('../database');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
+
+// Single source of truth for the secret — also used by middleware/auth.js.
+// In production this MUST be set as an environment variable.
 const JWT_SECRET = process.env.JWT_SECRET || 'chiro-dev-secret-change-in-production';
 
 router.post('/login', async (req, res) => {
@@ -21,7 +31,8 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' });
     res.json({ token, user: payload });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('POST /auth/login error:', err);
+    res.status(500).json({ error: 'Login failed' });
   }
 });
 
@@ -46,7 +57,8 @@ router.post('/register', async (req, res) => {
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' });
     res.status(201).json({ token, user: payload });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('POST /auth/register error:', err);
+    res.status(500).json({ error: 'Registration failed' });
   }
 });
 
@@ -68,7 +80,8 @@ router.post('/register-patient', auth(['doctor']), async (req, res) => {
     );
     res.status(201).json({ message: 'Patient account created', id: rows[0].id });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('POST /auth/register-patient error:', err);
+    res.status(500).json({ error: 'Failed to create patient account' });
   }
 });
 

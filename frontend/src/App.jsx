@@ -1,3 +1,13 @@
+/**
+ * App.jsx — Root router.
+ *
+ * Route structure:
+ *   /           → Login (also handles patient self-registration)
+ *   /doctor/*   → Doctor views (dashboard, patient detail, assessment form)
+ *   /patient    → Patient dashboard (read-only health plan view)
+ *
+ * ProtectedRoute redirects unauthenticated or wrong-role users back to /.
+ */
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Login from './components/Login'
 import DoctorDashboard from './components/DoctorDashboard'

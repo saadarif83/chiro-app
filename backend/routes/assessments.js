@@ -1,5 +1,15 @@
+/**
+ * routes/assessments.js — Assessment CRUD.
+ *
+ * GET  /api/assessments/patient/:patientId → all assessments for a patient
+ * GET  /api/assessments/:id                → single assessment with conditions
+ * POST /api/assessments                    → create (doctor only, transactional)
+ * PUT  /api/assessments/:id               → update (doctor only)
+ *
+ * Patients may only read their own assessments (enforced by req.user checks).
+ */
 const express = require('express');
-const { db } = require('../database');
+const { db, pool } = require('../database');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
@@ -41,7 +51,8 @@ router.get('/patient/:patientId', auth(['doctor', 'patient']), async (req, res) 
     );
     res.json(result);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('GET /assessments/patient/:id error:', err);
+    res.status(500).json({ error: 'Failed to load assessments' });
   }
 });
 
@@ -66,48 +77,56 @@ router.get('/:id', auth(['doctor', 'patient']), async (req, res) => {
 
     res.json({ ...assessment, conditions: await getConditionsForAssessment(assessment.id) });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('GET /assessments/:id error:', err);
+    res.status(500).json({ error: 'Failed to load assessment' });
   }
 });
 
-// Create assessment
+// Create assessment — uses a transaction so the assessment row and its
+// condition links are always written atomically.
 router.post('/', auth(['doctor']), async (req, res) => {
-  const client = await db.query('BEGIN').catch(() => null);
+  const { patient_id, notes, condition_ids = [], recommended_plan_id, assessment_date } = req.body;
+  if (!patient_id) return res.status(400).json({ error: 'patient_id is required' });
+
+  const client = await pool.connect();
   try {
-    const { patient_id, notes, condition_ids = [], recommended_plan_id, assessment_date } = req.body;
-    if (!patient_id) return res.status(400).json({ error: 'patient_id is required' });
+    await client.query('BEGIN');
 
-    // Use a transaction
-    const pool = require('../database').db;
-
-    const { rows } = await pool.run(`
-      INSERT INTO assessments (patient_id, doctor_id, notes, recommended_plan_id, assessment_date)
-      VALUES ($1,$2,$3,$4,$5) RETURNING id
-    `, [
-      patient_id, req.user.id,
-      notes || null,
-      recommended_plan_id || null,
-      assessment_date || new Date().toISOString().split('T')[0]
-    ]);
-
+    const { rows } = await client.query(
+      `INSERT INTO assessments (patient_id, doctor_id, notes, recommended_plan_id, assessment_date)
+       VALUES ($1,$2,$3,$4,$5) RETURNING id`,
+      [
+        patient_id,
+        req.user.id,
+        notes || null,
+        recommended_plan_id || null,
+        assessment_date || new Date().toISOString().split('T')[0],
+      ]
+    );
     const newId = rows[0].id;
 
     for (const cid of condition_ids) {
-      await pool.run(
+      await client.query(
         'INSERT INTO assessment_conditions (assessment_id, condition_id) VALUES ($1,$2)',
         [newId, cid]
       );
     }
 
-    const assessment = await db.get(`
-      SELECT a.*, tp.name AS plan_name FROM assessments a
-      LEFT JOIN treatment_plans tp ON tp.id = a.recommended_plan_id
-      WHERE a.id = $1
-    `, [newId]);
+    await client.query('COMMIT');
 
+    const assessment = await db.get(
+      `SELECT a.*, tp.name AS plan_name FROM assessments a
+       LEFT JOIN treatment_plans tp ON tp.id = a.recommended_plan_id
+       WHERE a.id = $1`,
+      [newId]
+    );
     res.status(201).json({ ...assessment, conditions: await getConditionsForAssessment(newId) });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    await client.query('ROLLBACK');
+    console.error('POST /assessments error:', err);
+    res.status(500).json({ error: 'Failed to save assessment' });
+  } finally {
+    client.release();
   }
 });
 
@@ -147,7 +166,8 @@ router.put('/:id', auth(['doctor']), async (req, res) => {
 
     res.json({ ...updated, conditions: await getConditionsForAssessment(assessmentId) });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('PUT /assessments/:id error:', err);
+    res.status(500).json({ error: 'Failed to update assessment' });
   }
 });
 

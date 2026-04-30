@@ -1,3 +1,15 @@
+/**
+ * AssessmentForm — Create or edit a patient assessment (doctor only).
+ *
+ * Accessed at /doctor/patients/:id/assess (new)
+ *             /doctor/patients/:id/assess/:assessmentId (edit)
+ *
+ * Features:
+ *  - Conditions checklist grouped by spinal region with live count badge
+ *  - Auto-suggests the matching treatment plan tier based on condition count
+ *  - Doctor can override the suggestion by selecting a plan manually
+ *  - Free-text notes field for clinical observations
+ */
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { conditionsApi, assessmentsApi, patientsApi } from '../api'

@@ -1,3 +1,10 @@
+/**
+ * DoctorDashboard — Landing page for authenticated doctors.
+ *
+ * Shows aggregate stats (total patients, assessed count, total assessments)
+ * and a searchable patient list. Doctors can add new patients via the modal
+ * or navigate to a patient's detail page.
+ */
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { patientsApi } from '../api'

@@ -3,27 +3,36 @@ const bcrypt = require('bcryptjs');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  // Render PostgreSQL requires SSL in production
+  // Render/Neon PostgreSQL requires SSL in production
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
-// ── Simple query helper ───────────────────────────────────────────────────────
+/**
+ * Thin query helpers that wrap pg.Pool for ergonomic use across routes.
+ * - db.get    → first row or undefined
+ * - db.all    → all rows
+ * - db.run    → full pg Result (use when you need rowCount or RETURNING)
+ * - db.query  → raw pg Result (same as db.run, kept for symmetry)
+ *
+ * For multi-statement transactions, acquire a dedicated client directly:
+ *   const client = await pool.connect();
+ *   try { await client.query('BEGIN'); ... await client.query('COMMIT'); }
+ *   catch { await client.query('ROLLBACK'); throw e; }
+ *   finally { client.release(); }
+ */
 const db = {
   query: (text, params) => pool.query(text, params),
 
-  // Returns first row or undefined (mirrors better-sqlite3's .get())
   get: async (text, params) => {
     const { rows } = await pool.query(text, params);
     return rows[0];
   },
 
-  // Returns all rows (mirrors better-sqlite3's .all())
   all: async (text, params) => {
     const { rows } = await pool.query(text, params);
     return rows;
   },
 
-  // Returns result object with rowCount / rows
   run: (text, params) => pool.query(text, params),
 };
 
@@ -162,4 +171,5 @@ async function initDB() {
   console.log('Database ready');
 }
 
-module.exports = { db, initDB };
+// Export pool so routes that need real transactions can call pool.connect()
+module.exports = { db, pool, initDB };

@@ -1,3 +1,10 @@
+/**
+ * Login — Public entry page with sign-in and patient self-registration tabs.
+ *
+ * On successful authentication, stores the JWT and user object in
+ * localStorage then redirects to /doctor or /patient based on role.
+ * Already-authenticated users are immediately redirected on mount.
+ */
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { authApi } from '../api'

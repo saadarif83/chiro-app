@@ -1,3 +1,10 @@
+/**
+ * TreatmentPlanCard — Displays a single treatment plan tier.
+ *
+ * Props:
+ *   plan          {object}  — treatment plan row from the database
+ *   isRecommended {boolean} — when true, renders a highlighted "Your Recommended Plan" ring
+ */
 const STYLES = {
   'Basic Care':       { border: 'border-blue-400',   bg: 'bg-blue-50',   badge: 'bg-blue-100 text-blue-800',   icon: '🔵', ring: 'ring-blue-400'   },
   'Standard Care':    { border: 'border-teal-400',   bg: 'bg-teal-50',   badge: 'bg-teal-100 text-teal-800',   icon: '🔷', ring: 'ring-teal-400'   },

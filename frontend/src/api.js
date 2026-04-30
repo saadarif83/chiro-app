@@ -1,3 +1,10 @@
+/**
+ * api.js — Typed fetch wrappers for every backend endpoint.
+ *
+ * All requests automatically attach the JWT stored in localStorage.
+ * All non-2xx responses are converted into thrown Errors so callers
+ * can use a simple try/catch without inspecting the response status.
+ */
 const BASE = '/api';
 
 const headers = () => ({

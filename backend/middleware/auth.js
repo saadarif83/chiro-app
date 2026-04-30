@@ -1,3 +1,12 @@
+/**
+ * middleware/auth.js — JWT authentication + role-based access control.
+ *
+ * Usage: auth()                     → any authenticated user
+ *        auth(['doctor'])            → doctor only
+ *        auth(['doctor','patient'])  → either role
+ *
+ * On success the decoded JWT payload is attached to req.user.
+ */
 const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'chiro-dev-secret-change-in-production';

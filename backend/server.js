@@ -1,3 +1,10 @@
+/**
+ * server.js — Express entry point for ChiroCare API.
+ *
+ * Start order: load .env → mount routes → init DB → listen.
+ * The DB init is intentionally done before listen() so that the first
+ * request never hits a cold database.
+ */
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');

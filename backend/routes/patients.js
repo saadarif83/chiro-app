@@ -1,3 +1,9 @@
+/**
+ * routes/patients.js — Patient management (doctor-only).
+ *
+ * GET /api/patients      → list all patients with assessment stats
+ * GET /api/patients/:id  → single patient record
+ */
 const express = require('express');
 const { db } = require('../database');
 const auth = require('../middleware/auth');
@@ -20,7 +26,8 @@ router.get('/', auth(['doctor']), async (req, res) => {
     `);
     res.json(patients);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('GET /patients error:', err);
+    res.status(500).json({ error: 'Failed to load patients' });
   }
 });
 
@@ -34,7 +41,8 @@ router.get('/:id', auth(['doctor']), async (req, res) => {
     if (!patient) return res.status(404).json({ error: 'Patient not found' });
     res.json(patient);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('GET /patients/:id error:', err);
+    res.status(500).json({ error: 'Failed to load patient' });
   }
 });
 

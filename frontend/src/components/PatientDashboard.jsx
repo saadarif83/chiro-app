@@ -1,3 +1,10 @@
+/**
+ * PatientDashboard — Read-only health plan view for authenticated patients.
+ *
+ * Displays the most recent assessment (conditions found, doctor's notes,
+ * recommended plan, spinal health progress bar), a history of prior
+ * assessments, and a full grid of all available treatment plan tiers.
+ */
 import { useState, useEffect } from 'react'
 import { assessmentsApi, conditionsApi } from '../api'
 import Navbar from './Navbar'

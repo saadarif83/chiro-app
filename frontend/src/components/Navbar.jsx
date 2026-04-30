@@ -1,3 +1,9 @@
+/**
+ * Navbar — Persistent top navigation bar shared by all authenticated views.
+ *
+ * Props:
+ *   title {string} — Page title shown after the logo (e.g. "Doctor Dashboard")
+ */
 import { useNavigate } from 'react-router-dom'
 
 export default function Navbar({ title }) {
